@@ -1,0 +1,5 @@
+node_modules/
+.env
+sent_history.csv
+open_events.csv
+npm-debug.log*
