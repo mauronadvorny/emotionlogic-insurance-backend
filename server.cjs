@@ -35,6 +35,7 @@ const transporter = nodemailer.createTransport({
 const FILE_PATH = path.join(DATA_DIR, 'sent_history.csv');
 const OPEN_EVENTS_FILE_PATH = path.join(DATA_DIR, 'open_events.csv');
 const CLICK_EVENTS_FILE_PATH = path.join(DATA_DIR, 'click_events.csv');
+const DELIVERY_REPORT_FILE_PATH = path.join(DATA_DIR, 'delivery_report.csv');
 const TRACKING_BASE_URL = (process.env.TRACKING_BASE_URL || process.env.APP_URL || '').trim().replace(/\/+$/, '');
 const TRACKING_EVENTS_URL = (process.env.TRACKING_EVENTS_URL || (TRACKING_BASE_URL ? `${TRACKING_BASE_URL}/open-events` : '')).trim();
 const CLICK_EVENTS_URL = (process.env.CLICK_EVENTS_URL || (TRACKING_BASE_URL ? `${TRACKING_BASE_URL}/click-events` : '')).trim();
@@ -330,6 +331,36 @@ const readSentHistoryRecords = () => {
     });
 };
 
+const writeDeliveryReportCsv = (records) => {
+  const headers = [
+    'name',
+    'outlet',
+    'email',
+    'country',
+    'topic',
+    'timestamp',
+    'status',
+    'trackingId',
+    'trackingEnabled',
+    'opened',
+    'openCount',
+    'firstOpenedAt',
+    'lastOpenedAt',
+    'clicked',
+    'clickCount',
+    'firstClickedAt',
+    'lastClickedAt',
+    'lastClickedTarget',
+  ];
+
+  const lines = [
+    headers.join(','),
+    ...records.map((record) => headers.map((field) => csvEscape(record[field] ?? '')).join(',')),
+  ];
+
+  fs.writeFileSync(DELIVERY_REPORT_FILE_PATH, `${lines.join('\n')}\n`, 'utf-8');
+};
+
 if (!TRACKING_ENABLED) {
   console.log('Tracking de abertura desativado: defina TRACKING_BASE_URL publico para registrar opens.');
 }
@@ -582,5 +613,6 @@ app.get('/sent-history', async (req, res) => {
     };
   });
 
+  writeDeliveryReportCsv(records);
   res.json(records);
 });
